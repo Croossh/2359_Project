@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { DiaryBodyProps } from 'types/interfaces';
-
-const BASE_URL = 'http://ec2-35-79-109-245.ap-northeast-1.compute.amazonaws.com';
+// http://ec2-35-79-109-245.ap-northeast-1.compute.amazonaws.com
+const BASE_URL = 'http://localhost:8000';
 const baseAxios = axios.create({
   baseURL: BASE_URL,
   withCredentials: true,
