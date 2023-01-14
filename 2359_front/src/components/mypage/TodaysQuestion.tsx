@@ -60,7 +60,7 @@ function TodaysQuestion() {
   // 이렇게 하니까.. undefined는 거를수 있는데 undefined를 만나버리면 더이상 리랜더링을 하지 않음
   const { data, isValidating } = useSWR<IData[]>(`/api/contents/filter/qna`, fetcher);
 
-  async function getAllQuestionList() {
+  const getAllQuestionList = async () => {
     if (data) {
       // 태그따로 만들어주는 영역 Record<string, boolean>[]
       const tmp = data.map((item) => item.qna.tag);
@@ -73,7 +73,7 @@ function TodaysQuestion() {
       setQnaData(data);
       setTagList(tmpTagList);
     }
-  }
+  };
 
   const handleTag = (item: string): void => {
     const newSelect = [...tagList];
@@ -86,7 +86,7 @@ function TodaysQuestion() {
     setTagList(newSelect);
   };
 
-  function showSelectedAnswers() {
+  const showSelectedAnswers = () => {
     if (tagList.length !== 0) {
       const trueKeyList: string[] = [];
       for (let i = 0; i < tagList.length; i += 1) {
@@ -107,7 +107,7 @@ function TodaysQuestion() {
         setResultAnswer([]);
       }
     }
-  }
+  };
 
   const handlePageChange = (page: number) => {
     setPage(page);
