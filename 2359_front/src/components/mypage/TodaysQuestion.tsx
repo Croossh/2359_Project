@@ -30,6 +30,7 @@ function TodaysQuestion() {
   const [page, setPage] = useState(1);
   const [pageList, setPageList] = useState(tagSelectedAnswer);
   const [showModal, setShowModal] = useState(false);
+  const [enabled, setEnabled] = useState(true);
   const [currentList, setCurrentList] = useState({
     selectedDate: '',
     qna: {
@@ -117,6 +118,36 @@ function TodaysQuestion() {
     setPageList(resultAnswer.slice(8 * (page - 1), 8 * page));
   };
 
+  const selectAllTag = () => {
+    const newTagList = [...tagList];
+
+    const tmpAllTag = [];
+    for (let i = 0; i < newTagList.length; i += 1) {
+      tmpAllTag.push(...Object.keys(newTagList[i]));
+    }
+
+    const makeTagAlltrue: Record<string, boolean>[] = tmpAllTag.map((tag) => {
+      return { [tag as string]: true };
+    });
+
+    setTagList(makeTagAlltrue);
+  };
+
+  const nonSelectAllTag = () => {
+    const newTagList = [...tagList];
+
+    const tmpAllTag = [];
+    for (let i = 0; i < newTagList.length; i += 1) {
+      tmpAllTag.push(...Object.keys(newTagList[i]));
+    }
+
+    const makeTagAlltrue: Record<string, boolean>[] = tmpAllTag.map((tag) => {
+      return { [tag as string]: false };
+    });
+
+    setTagList(makeTagAlltrue);
+  };
+
   // swr의 반환값중 isValidating(요청이나 갱신 로딩의 여부) 를 이용해서 useEffect 를 이용해서 리랜더링을 하게 만듬
   useEffect(() => {
     getAllQuestionList();
@@ -133,6 +164,31 @@ function TodaysQuestion() {
 
   return (
     <Container>
+      <div className="flex justify-end">
+        <ToggleContainer>
+          <div className="flex">
+            <label className="inline-flex relative items-center mr-5 cursor-pointer">
+              <input type="checkbox" className="sr-only peer" checked={enabled} readOnly />
+              <ToggleButton
+                onClick={() => {
+                  setEnabled(!enabled);
+                  if (enabled) {
+                    nonSelectAllTag();
+                  } else {
+                    selectAllTag();
+                  }
+                }}
+              >
+                {null}
+              </ToggleButton>
+              <span className="ml-2 text-sm font-medium text-gray-900">
+                {enabled ? '모든 태그 선택' : '모두 선택 해제'}
+              </span>
+            </label>
+          </div>
+        </ToggleContainer>
+      </div>
+
       <ButtonContainer>
         {tagList
           ? tagList.map((tagItem) => {
@@ -175,13 +231,16 @@ function TodaysQuestion() {
           )}
         </AnswerUl>
       </AnswerContainer>
-      <Pagination
-        activePage={page}
-        itemsCountPerPage={8}
-        totalItemsCount={resultAnswer.length}
-        pageRangeDisplayed={5}
-        onChange={handlePageChange}
-      />
+      {resultAnswer.length !== 0 ? (
+        <Pagination
+          activePage={page}
+          itemsCountPerPage={8}
+          totalItemsCount={resultAnswer.length}
+          pageRangeDisplayed={5}
+          onChange={handlePageChange}
+        />
+      ) : null}
+
       {showModal ? (
         <ModalBasic title={currentList.qna.question} closeText="닫기" cancelHandler={() => setShowModal(false)}>
           <div>작성날짜: {`${year}년 ${month}월 ${day}일`}</div>
