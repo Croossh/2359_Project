@@ -9,7 +9,7 @@ import Login from 'pages/Login';
 import SetDiaryOption from 'components/mypage/SetDiaryOption';
 import EmotionStatistics from 'components/mypage/EmotionStatistics';
 import AccountStatistics from 'components/mypage/AccountStatistics';
-import Questions from 'components/mypage/Questions';
+import TodaysQuestion from 'components/mypage/TodaysQuestion';
 import SignUp from './pages/SignUp';
 
 export default function Routes() {
@@ -26,7 +26,7 @@ export default function Routes() {
           <Route path="select-option" element={<SetDiaryOption />} />
           <Route path="emotion" element={<EmotionStatistics />} />
           <Route path="account" element={<AccountStatistics />} />
-          <Route path="collect-question" element={<Questions />} />
+          <Route path="collect-question" element={<TodaysQuestion />} />
         </Route>
       </Route>
       <Route path="/diary/:id" element={<Diary />} />

@@ -10,6 +10,7 @@ module.exports = {
     'prettier',
   ],
   rules: {
+    'no-param-reassign': 0,
     'guard-for-in': 0,
     'linebreak-style': 0,
     'import/prefer-default-export': 0,

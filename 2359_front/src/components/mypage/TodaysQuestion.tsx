@@ -1,15 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import uuid from 'react-uuid';
 import './Questions.css';
-import axios from 'axios';
 import tw from 'tailwind-styled-components';
 import ModalBasic from 'components/ModalBasic';
 import Pagination from 'react-js-pagination';
+import useSWR from 'swr';
+import { headerAxios } from 'api';
 
 interface IQnaProps {
-  question: string | undefined;
-  answer: string | undefined;
-  tag: string | undefined;
+  question: string;
+  answer: string;
+  tag: string;
   _id: string;
 }
 
@@ -18,19 +19,13 @@ interface IData {
   qna: IQnaProps;
 }
 
-interface SelectedProps {
-  [key: string]: boolean;
-}
-
-function Questions() {
-  const initialData: IData[] = [];
-  const tags: string[] = [];
-  const newData: any = [];
+function TodaysQuestion() {
+  const initalQnaData: IData[] = [];
+  const initalTagList: Record<string, boolean>[] = [];
   const tagSelectedAnswer: object[] = [];
 
-  const [qnaList, setQnaList] = useState(initialData);
-  const [tagList, setTagList] = useState(tags);
-  const [isSelect, setIsSelect] = useState(newData);
+  const [qnaData, setQnaData] = useState(initalQnaData);
+  const [tagList, setTagList] = useState(initalTagList);
   const [resultAnswer, setResultAnswer] = useState(tagSelectedAnswer);
   const [page, setPage] = useState(1);
   const [pageList, setPageList] = useState(tagSelectedAnswer);
@@ -43,62 +38,76 @@ function Questions() {
       tag: '',
     },
   });
-  const [enabled, setEnabled] = useState(true);
 
   const currentDate = currentList.selectedDate;
   const year = currentDate.slice(0, 4);
   const month = currentDate.slice(4, 6);
   const day = currentDate.slice(6);
 
+  const sliceDate = (date: string) => {
+    const year = date.slice(0, 4);
+    const month = date.slice(4, 6);
+    const day = date.slice(6);
+    return [year, '/', month, '/', day].join('');
+  };
+
+  const fetcher = async (url: string) => {
+    const token = localStorage.getItem('token') ?? '';
+    const res = await headerAxios(token).get(url);
+    return res.data;
+  };
+
+  // 이렇게 하니까.. undefined는 거를수 있는데 undefined를 만나버리면 더이상 리랜더링을 하지 않음
+  const { data, isValidating } = useSWR<IData[]>(`/api/contents/filter/qna`, fetcher);
+
   async function getAllQuestionList() {
-    const res = await axios.get('/api/contents/filter/qna', {
-      headers: {
-        authorization: `Bearer ${localStorage.getItem('token')}`,
-      },
-    });
-    const data = await res.data;
+    if (data) {
+      // 태그따로 만들어주는 영역 Record<string, boolean>[]
+      const tmp = data.map((item) => item.qna.tag);
+      const tmpTagList: Record<string, boolean>[] = tmp
+        .filter((item, idx) => tmp.indexOf(item) === idx)
+        .map((tag) => {
+          return { [tag as string]: true };
+        });
 
-    const tmp = data.map((item: any) => item.qna.tag);
-    const tmpTagList: string[] = tmp
-      .filter((value: string, idx: number) => tmp.indexOf(value) === idx)
-      .filter((item: string) => item !== undefined);
-
-    tmpTagList.forEach((item: string) => {
-      newData[item] = true;
-    });
-
-    setQnaList(data);
-    setTagList(tmpTagList);
+      setQnaData(data);
+      setTagList(tmpTagList);
+    }
   }
 
+  const handleTag = (item: string): void => {
+    const newSelect = [...tagList];
+
+    for (let i = 0; i < newSelect.length; i += 1) {
+      if (Object.keys(newSelect[i]).includes(item)) {
+        newSelect[i][item] = !newSelect[i][item];
+      }
+    }
+    setTagList(newSelect);
+  };
+
   function showSelectedAnswers() {
-    if (qnaList.length !== 0) {
-      const trueKey = Object.keys(isSelect).filter((key) => isSelect[key] === true);
-      if (trueKey.length !== 0) {
+    if (tagList.length !== 0) {
+      const trueKeyList: string[] = [];
+      for (let i = 0; i < tagList.length; i += 1) {
+        const tmpTrueTag = Object.keys(tagList[i]).filter((key) => tagList[i][key] === true);
+        trueKeyList.push(...tmpTrueTag);
+      }
+
+      if (trueKeyList.length !== 0) {
         const tmpArr: object[] = [];
-        for (let i = 0; i < trueKey.length; i += 1) {
-          tmpArr.push(qnaList.filter((ele: IData) => trueKey[i] === ele.qna.tag));
+        for (let i = 0; i < trueKeyList.length; i += 1) {
+          tmpArr.push(qnaData.filter((ele: IData) => trueKeyList[i] === ele.qna.tag));
         }
-        const reducedArr: any = tmpArr.reduce((acc: any, cur: any) => {
-          return [...acc, ...cur];
-        });
+        const reducedArr = tmpArr.reduce((acc: object[], curr) => {
+          return [...acc, ...(curr as object[])];
+        }, []);
         setResultAnswer(reducedArr);
       } else {
         setResultAnswer([]);
       }
     }
   }
-  const handleTag = (item: string): void => {
-    const newSelect = { ...isSelect };
-    newSelect[item] = !newSelect[item];
-    setIsSelect(newSelect);
-  };
-  const tagBtnClassName = (ele: string): string => {
-    if (isSelect[ele]) {
-      return selectBtnClass;
-    }
-    return nonSelectBtnClass;
-  };
 
   const handlePageChange = (page: number) => {
     setPage(page);
@@ -108,25 +117,10 @@ function Questions() {
     setPageList(resultAnswer.slice(8 * (page - 1), 8 * page));
   };
 
-  const selectAllTag = () => {
-    const newSelect = { ...isSelect };
-    for (const key in newSelect) {
-      newSelect[key] = true;
-    }
-    setIsSelect(newSelect);
-  };
-
-  const nonSelectAllTag = () => {
-    const newSelect = { ...isSelect };
-    for (const key in newSelect) {
-      newSelect[key] = false;
-    }
-    setIsSelect(newSelect);
-  };
-
+  // swr의 반환값중 isValidating(요청이나 갱신 로딩의 여부) 를 이용해서 useEffect 를 이용해서 리랜더링을 하게 만듬
   useEffect(() => {
     getAllQuestionList();
-  }, []);
+  }, [isValidating]);
 
   useEffect(() => {
     showAnswer();
@@ -135,49 +129,24 @@ function Questions() {
   useEffect(() => {
     showSelectedAnswers();
     showAnswer();
-  }, [qnaList, isSelect]);
+  }, [qnaData, tagList]);
 
   return (
     <Container>
-      <div className="flex justify-end">
-        <ToggleContainer>
-          <div className="flex">
-            <label className="inline-flex relative items-center mr-5 cursor-pointer">
-              <input type="checkbox" className="sr-only peer" checked={enabled} readOnly />
-              <ToggleButton
-                onClick={() => {
-                  setEnabled(!enabled);
-                  if (enabled) {
-                    nonSelectAllTag();
-                  } else {
-                    selectAllTag();
-                  }
-                }}
-              >
-                {null}
-              </ToggleButton>
-              <span className="ml-2 text-sm font-medium text-gray-900">
-                {enabled ? '모든 태그 선택' : '모두 선택 해제'}
-              </span>
-            </label>
-          </div>
-        </ToggleContainer>
-      </div>
-
       <ButtonContainer>
         {tagList
           ? tagList.map((tagItem) => {
               return (
                 <TagButtons
-                  className={tagBtnClassName(tagItem)}
-                  key={tagItem}
+                  key={uuid()}
+                  className={Object.values(tagItem)[0] ? selectBtnClass : nonSelectBtnClass}
                   type="button"
                   onClick={() => {
-                    handleTag(tagItem);
-                    setPage(1);
+                    handleTag(Object.keys(tagItem)[0]);
+                    showSelectedAnswers();
                   }}
                 >
-                  {tagItem}
+                  {Object.keys(tagItem)[0]}
                 </TagButtons>
               );
             })
@@ -186,6 +155,7 @@ function Questions() {
       <AnswerContainer>
         <AnswerUl>
           {pageList.length !== 0 ? (
+            // IData 형식으로 받는데 왜 안됨?
             pageList.map((ele: any) => (
               <AnswerList
                 key={uuid()}
@@ -194,7 +164,10 @@ function Questions() {
                   setShowModal(true);
                 }}
               >
-                {ele.qna.question}
+                <div className="flex justify-between">
+                  <div>{ele.qna.question}</div>
+                  <div>작성일: {sliceDate(ele.selectedDate)}</div>
+                </div>
               </AnswerList>
             ))
           ) : (
@@ -219,7 +192,7 @@ function Questions() {
   );
 }
 
-export default Questions;
+export default TodaysQuestion;
 
 const Container = tw.div`
   w-full  
