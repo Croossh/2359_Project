@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import tw from 'tailwind-styled-components';
 import { ResponsiveBar } from '@nivo/bar';
-import axios from 'axios';
+import useSWR from 'swr';
+import { headerAxios } from 'api';
 import { emotion } from 'types/enums';
 import { EMOTIONS } from 'types/enumConverter';
 import { getMonthDate } from 'utilities/date';
@@ -13,39 +14,38 @@ const currentMonth = date.getMonth() + 1;
 const monthDate = getMonthDate(date);
 
 function EmotionStatistics() {
-  const initialData: EmotionStaticProps[] = [];
-  const [data, setData] = useState<EmotionStaticProps[]>(initialData);
+  const initialEmotionList: EmotionStaticProps[] = [];
+  const [emotionList, setEmotionList] = useState<EmotionStaticProps[]>(initialEmotionList);
+
+  const fetcher = async (url: string) => {
+    const token = localStorage.getItem('token') ?? '';
+    const res = await headerAxios(token).get(url);
+    return res.data;
+  };
+
+  // 이렇게 하니까.. undefined는 거를수 있는데 undefined를 만나버리면 더이상 리랜더링을 하지 않음
+  const { data, isValidating } = useSWR(`/api/contents/filterEmotion/${monthDate}`, fetcher);
 
   async function getFilterEmotion() {
-    try {
-      const result = await axios.get(`/api/contents/filterEmotion/${monthDate}`, {
-        headers: {
-          authorization: `Bearer ${localStorage.getItem('token')}`,
-        },
-      });
-      const res = await result.data;
+    const convert: EmotionStaticProps = Object.entries(data).reduce((acc, [key, val]) => {
+      return { ...acc, [EMOTIONS[key as emotion]]: val };
+    }, {});
 
-      const convert: EmotionStaticProps = Object.entries(res).reduce((acc, [key, val]) => {
-        return { ...acc, [EMOTIONS[key as emotion]]: val };
-      }, {});
-
-      convert.name = '감정';
-      setData([convert]);
-    } catch (e) {
-      throw new Error();
-    }
+    convert.name = '감정';
+    setEmotionList([convert]);
   }
 
   useEffect(() => {
     getFilterEmotion();
-  }, []);
+  }, [isValidating]);
+
   return (
     <Container>
       <BarChartContainer>
         <StatisticsScript>감정 통계 - {currentMonth}월😘</StatisticsScript>
-        {data ? (
+        {emotionList ? (
           <ResponsiveBar
-            data={data}
+            data={emotionList}
             keys={Object.values(EMOTIONS)}
             margin={{ top: 30, right: 130, bottom: 60, left: 60 }}
             indexBy="name"
@@ -138,33 +138,3 @@ export const StatisticsScript = tw.div`
   text-2xl
   mt-5
 `;
-
-// 참고할 data 틀
-// const data = [
-//   {
-//     emotion: '행복',
-//     'hot dog': 34,
-//     'hot dogColor': 'hsl(110, 70%, 50%)',
-//     burger: 0,
-//     burgerColor: 'hsl(223, 70%, 50%)',
-//     sandwich: 0,
-//     sandwichColor: 'hsl(240, 70%, 50%)',
-//     kebab: 0,
-//     kebabColor: 'hsl(92, 70%, 50%)',
-//     fries: 0,
-//     friesColor: 'hsl(207, 70%, 50%)',
-//   },
-//   {
-//     emotion: '기쁨',
-//     'hot dog': 194,
-//     'hot dogColor': 'hsl(264, 70%, 50%)',
-//     burger: 99,
-//     burgerColor: 'hsl(216, 70%, 50%)',
-//     sandwich: 159,
-//     sandwichColor: 'hsl(42, 70%, 50%)',
-//     kebab: 124,
-//     kebabColor: 'hsl(138, 70%, 50%)',
-//     fries: 188,
-//     friesColor: 'hsl(336, 70%, 50%)',
-//   },
-// ];

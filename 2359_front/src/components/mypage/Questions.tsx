@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import uuid from 'react-uuid';
-import './Questions.css';
+import './pagination.css';
 import axios from 'axios';
 import tw from 'tailwind-styled-components';
 import ModalBasic from 'components/ModalBasic';
