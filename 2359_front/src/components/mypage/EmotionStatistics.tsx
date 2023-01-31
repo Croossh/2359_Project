@@ -23,7 +23,6 @@ function EmotionStatistics() {
     return res.data;
   };
 
-  // 이렇게 하니까.. undefined는 거를수 있는데 undefined를 만나버리면 더이상 리랜더링을 하지 않음
   const { data, isValidating } = useSWR(`/api/contents/filterEmotion/${monthDate}`, fetcher);
 
   async function getFilterEmotion() {
