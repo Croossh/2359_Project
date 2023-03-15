@@ -92,20 +92,23 @@
 
 ## 3. 서비스 구성도
 
-### 🗺️서비스 구조도
+### 🗺️ 1-1 서비스 구조도<br>
 <img src="readme/서비스_구조도.png" width="1000" height="550"/>
 
-### 🎨와이어프레임
+### 🚀 1-2 인프라 구조도<br>
 
+<img src="readme/인프라구조도.png" width="1000" height="550"/> <br>
+👉[인프라 구조 보기](https://media.discordapp.net/attachments/1050706291208757269/1057661481912639599/1beb610a808d2a8c.png?width=949&height=671)
+
+### 🎨 1-3 와이어프레임<br>
+
+<img src="readme/와이어프레임.jpg" width="1000" height="550"/> <br>
 👉[피그마 보기](https://www.figma.com/file/weAyFeVUqDEUxBhpiWEe8W/23%3A59?node-id=0%3A1&t=0lGAFZpWEHLHBfqr-1)
 
-### 📋API 명세
+### 📋 1-4 API 명세<br>
 
+<img src="readme/API.jpg"> <br>
 👉[API 명세 보기](https://surgedev.notion.site/DB-API-3c9c7cdb822f4dd080dcdb45fb8e3de2)
-
-### 🚀인프라 구조
-
-👉[인프라 구조 보기](https://media.discordapp.net/attachments/1050706291208757269/1057661481912639599/1beb610a808d2a8c.png?width=949&height=671)
 
 ## 4. 프로젝트 팀원 역할 분담
 
